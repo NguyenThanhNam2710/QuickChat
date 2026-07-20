@@ -6,12 +6,26 @@
 //
 
 import SwiftUI
+import FirebaseCore
+
 
 @main
 struct QuickChatApp: App {
+    @State private var appState = AppState()
+    @State private var router = AppRouter()
+    
+    init() {
+        FirebaseApp.configure()
+    }
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .environment(appState)
+                .environment(router)
         }
+#if os(macOS)
+        .windowResizability(.contentSize)
+#endif
     }
 }
