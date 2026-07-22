@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B1528E46300F554F00CF9E76 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = B1528E45300F554F00CF9E76 /* GoogleSignIn */; };
+		B1528E48300F554F00CF9E76 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B1528E47300F554F00CF9E76 /* GoogleSignInSwift */; };
 		B1A751AF300DD68B00CF968C /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = B1A751AE300DD68B00CF968C /* FirebaseAuth */; };
 		B1A751B1300DD68B00CF968C /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = B1A751B0300DD68B00CF968C /* FirebaseFirestore */; };
 		B1A751B3300DD68B00CF968C /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = B1A751B2300DD68B00CF968C /* FirebaseMessaging */; };
@@ -17,9 +19,22 @@
 		B11A970A300DD21F003A1A0F /* QuickChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuickChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B1528E4A300F559A00CF9E76 /* Exceptions for "QuickChat" folder in "QuickChat" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B11A9709300DD21F003A1A0F /* QuickChat */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B11A970C300DD21F003A1A0F /* QuickChat */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B1528E4A300F559A00CF9E76 /* Exceptions for "QuickChat" folder in "QuickChat" target */,
+			);
 			path = QuickChat;
 			sourceTree = "<group>";
 		};
@@ -30,8 +45,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1528E46300F554F00CF9E76 /* GoogleSignIn in Frameworks */,
 				B1A751B3300DD68B00CF968C /* FirebaseMessaging in Frameworks */,
 				B1A751B5300DD68B00CF968C /* FirebaseStorage in Frameworks */,
+				B1528E48300F554F00CF9E76 /* GoogleSignInSwift in Frameworks */,
 				B1A751AF300DD68B00CF968C /* FirebaseAuth in Frameworks */,
 				B1A751B1300DD68B00CF968C /* FirebaseFirestore in Frameworks */,
 			);
@@ -80,6 +97,8 @@
 				B1A751B0300DD68B00CF968C /* FirebaseFirestore */,
 				B1A751B2300DD68B00CF968C /* FirebaseMessaging */,
 				B1A751B4300DD68B00CF968C /* FirebaseStorage */,
+				B1528E45300F554F00CF9E76 /* GoogleSignIn */,
+				B1528E47300F554F00CF9E76 /* GoogleSignInSwift */,
 			);
 			productName = QuickChat;
 			productReference = B11A970A300DD21F003A1A0F /* QuickChat.app */;
@@ -111,6 +130,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				B1A751AD300DD68B00CF968C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				B1528E44300F554F00CF9E76 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B11A970B300DD21F003A1A0F /* Products */;
@@ -263,14 +283,15 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = QuickChat/QuickChat.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"QuickChat/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 624U8894F6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QuickChat/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -303,14 +324,15 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = QuickChat/QuickChat.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"QuickChat/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 624U8894F6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QuickChat/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -361,6 +383,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		B1528E44300F554F00CF9E76 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.2.0;
+			};
+		};
 		B1A751AD300DD68B00CF968C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -372,6 +402,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		B1528E45300F554F00CF9E76 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B1528E44300F554F00CF9E76 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		B1528E47300F554F00CF9E76 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B1528E44300F554F00CF9E76 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
 		B1A751AE300DD68B00CF968C /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B1A751AD300DD68B00CF968C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

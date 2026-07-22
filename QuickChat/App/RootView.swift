@@ -32,9 +32,9 @@ struct RootView: View {
             }
             .padding()
         case .signedOut:
-            PlaceholderView(title: "Not logged in", subTitle: "LoginView will build in phase 2")
+            LoginView()
         case .signedIn:
-            PlaceholderView(title: "Logged in", subTitle: "ConversationListView will build in phase 3")
+            SignedInPlaceholderView()
         }
     }
     
@@ -48,6 +48,35 @@ struct RootView: View {
         case .profile(let userID):
             PlaceholderView(title: "Profile", subTitle: "userID: \(userID) - phase 5-6")
         }
+    }
+}
+
+/// View tạm thời để test trọn vòng đăng nhập/đăng xuất trong lúc chờ Giai đoạn 3 (ConversationList).
+private struct SignedInPlaceholderView: View {
+    @Environment(\.authService) private var authService
+    @Environment(AlertCenter.self) private var alertCenter
+    
+    var body: some View {
+        VStack(spacing: Spacing.md) {
+            Text("Logged in")
+                .font(AppFont.title)
+            Text("ConversationListView will build in phase 3")
+                .font(AppFont.caption)
+                .foregroundStyle(.secondary)
+            
+            Button("Đăng xuất", role: .destructive) {
+                alertCenter.showConfirmation(
+                    title: "Đăng xuất",
+                    message: "Bạn có chắc muốn đăng xuất khỏi QuickChat?",
+                    confirmTitle: "Đăng xuất",
+                    cancelTitle: "Hủy") {
+                        try? authService.signOut()
+                    }
+            }
+            .buttonStyle(.bordered)
+            .padding(.top, Spacing.md)
+        }
+        .padding()
     }
 }
 
