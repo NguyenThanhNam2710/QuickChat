@@ -42,22 +42,24 @@ struct LoginView: View {
                 VStack(spacing: Spacing.xs) {
                     Text("QuickChat")
                         .font(AppFont.title)
-                    Text("Đăng nhập để tiếp tục")
+                    Text(L10n.Auth.loginSubtitle)
                         .font(AppFont.caption)
                         .foregroundStyle(.secondary)
                 }
                 .padding(.top, Spacing.xl)
                 
                 VStack(spacing: Spacing.sm) {
-                    TextField("Email", text: $viewModel.email)
+                    TextField(L10n.Common.email, text: $viewModel.email)
 #if os(iOS)
                         .textInputAutocapitalization(.never)
                         .keyboardType(.emailAddress)
 #endif
                         .textFieldStyle(.roundedBorder)
                     
-                    SecureField("Mật khẩu", text: $viewModel.password)
+                    SecureField(L10n.Auth.passwordPlaceholder, text: $viewModel.password)
                         .textFieldStyle(.roundedBorder)
+                    Toggle(L10n.Auth.keepSignedIn, isOn: $viewModel.keepSignedIn)
+                        .font(AppFont.caption)
                 }
                 
                 if let errorMessage = viewModel.errorMessage {
@@ -73,7 +75,7 @@ struct LoginView: View {
                         if viewModel.isLoading {
                             ProgressView()
                         } else {
-                            Text("Đăng nhập")
+                            Text(L10n.Auth.signInButton)
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -101,7 +103,7 @@ struct LoginView: View {
                 } label: {
                     HStack {
                         Image(systemName: "g.circle.fill")
-                        Text("Đăng nhập với Google")
+                        Text(L10n.Auth.googleButton)
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -109,7 +111,7 @@ struct LoginView: View {
                 .disabled(viewModel.isLoading)
 #endif
                 
-                Button("Chưa có tài khoản? Đăng ký") {
+                Button(L10n.Auth.goToSignUp) {
                     showSignUp = true
                 }
                 .buttonStyle(.bordered)
@@ -127,7 +129,7 @@ struct LoginView: View {
     private var socialDivider: some View {
         HStack {
             VStack { Divider() }
-            Text("hoặc")
+            Text(L10n.Auth.orDivider)
                 .font(AppFont.caption)
                 .foregroundStyle(.secondary)
             VStack { Divider() }

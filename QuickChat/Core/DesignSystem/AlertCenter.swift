@@ -20,8 +20,8 @@ final class AlertCenter {
     func showConfirmation(
         title: String,
         message: String? = nil,
-        confirmTitle: String = "Xác nhận",
-        cancelTitle: String = "Hủy",
+        confirmTitle: String = L10n.Common.confirm,
+        cancelTitle: String = L10n.Common.cancel,
         isDestructive: Bool = true,
         onConfirm: @escaping () -> Void
     ) {

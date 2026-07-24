@@ -24,4 +24,8 @@ enum Constants {
     enum Pagination {
         static let messagesPageSize = 30
     }
+    
+    enum UserDefaultsKeys {
+        static let keepSignedIn = "keepSignedIn"
+    }
 }

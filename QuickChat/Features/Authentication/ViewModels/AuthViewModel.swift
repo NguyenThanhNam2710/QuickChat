@@ -29,6 +29,8 @@ final class AuthViewModel {
     private let authService: AuthServiceProtocol
     private var currentAppleNonce: String?
     
+    var keepSignedIn: Bool = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.keepSignedIn) as? Bool ?? true
+    
     init(authService: AuthServiceProtocol) {
         self.authService = authService
     }
@@ -48,7 +50,7 @@ final class AuthViewModel {
     
     func signIn() async {
         guard isLoginFormValid else {
-            errorMessage = "Vui lòng nhập email hợp lệ và mật khẩu."
+            errorMessage = L10n.Auth.invalidFormError
             return
         }
         await perform { try await self.authService.signIn(email: self.email, password: self.password) }
@@ -57,7 +59,7 @@ final class AuthViewModel {
     func signUp() async {
         guard isSignUpFormValid else {
             errorMessage = password != confirmPassword
-            ? "Mật khẩu xác nhận không khớp."
+            ? L10n.Common.passwordMismatch
             : AuthError.weakPassword.localizedDescription
             return
         }
@@ -116,8 +118,7 @@ final class AuthViewModel {
         defer { isLoading = false}
         do {
             _ = try await action()
-            // Không cần set authPhase thủ công ở đây — AppState.observeAuthState()
-            // sẽ tự nhận được user mới qua authStateStream và điều hướng app.
+            UserDefaults.standard.set(keepSignedIn, forKey: Constants.UserDefaultsKeys.keepSignedIn)
             return true
         } catch {
             errorMessage = (error as? AuthError)?.localizedDescription ?? error.localizedDescription

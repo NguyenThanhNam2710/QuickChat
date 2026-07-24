@@ -28,55 +28,24 @@ struct RootView: View {
         switch appState.authPhase {
         case .loading:
             VStack(spacing: Spacing.md) {
-                ProgressView("Loading ...")
+                ProgressView(L10n.Common.loading)
             }
             .padding()
         case .signedOut:
             LoginView()
         case .signedIn:
-            SignedInPlaceholderView()
+            ConversationListView()
         }
     }
     
     @ViewBuilder
     private func destinationView(for route: AppRoute) -> some View {
         switch route {
-        case .converstationList:
-            PlaceholderView(title: "Converstation list", subTitle: "phase 3")
         case .chat(let converstationID):
             PlaceholderView(title: "Chat", subTitle: "ConverstationID: \(converstationID) - phase 4")
-        case .profile(let userID):
-            PlaceholderView(title: "Profile", subTitle: "userID: \(userID) - phase 5-6")
+        case .profile(_):
+            ProfileView()
         }
-    }
-}
-
-/// View tạm thời để test trọn vòng đăng nhập/đăng xuất trong lúc chờ Giai đoạn 3 (ConversationList).
-private struct SignedInPlaceholderView: View {
-    @Environment(\.authService) private var authService
-    @Environment(AlertCenter.self) private var alertCenter
-    
-    var body: some View {
-        VStack(spacing: Spacing.md) {
-            Text("Logged in")
-                .font(AppFont.title)
-            Text("ConversationListView will build in phase 3")
-                .font(AppFont.caption)
-                .foregroundStyle(.secondary)
-            
-            Button("Đăng xuất", role: .destructive) {
-                alertCenter.showConfirmation(
-                    title: "Đăng xuất",
-                    message: "Bạn có chắc muốn đăng xuất khỏi QuickChat?",
-                    confirmTitle: "Đăng xuất",
-                    cancelTitle: "Hủy") {
-                        try? authService.signOut()
-                    }
-            }
-            .buttonStyle(.bordered)
-            .padding(.top, Spacing.md)
-        }
-        .padding()
     }
 }
 

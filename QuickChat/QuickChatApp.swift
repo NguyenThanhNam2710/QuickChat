@@ -20,6 +20,8 @@ struct QuickChatApp: App {
     @State private var alertCenter = AlertCenter()
     
     private let authService: AuthServiceProtocol
+    private let chatService: ChatServiceProtocol
+    private let userService: UserServiceProtocol
     
     init() {
 #if DEBUG
@@ -27,11 +29,14 @@ struct QuickChatApp: App {
 #endif
         FirebaseApp.configure()
         authService = AuthService()
+        chatService = ChatService()
+        userService = UserService()
     }
     
     var body: some Scene {
         WindowGroup {
             RootView()
+                .id(LocalizationManager.shared.currentLanguage)
                 .toastOverlay()
                 .alertPresenter()
                 .environment(appState)
@@ -39,8 +44,10 @@ struct QuickChatApp: App {
                 .environment(toastCenter)
                 .environment(alertCenter)
                 .environment(\.authService, authService)
+                .environment(\.chatService, chatService)
+                .environment(\.userService, userService)
                 .task {
-                    await appState.observeAuthState(authService)
+                    await appState.observeAuthState(authService, userService: userService)
                 }
 #if os(iOS)
                 .onOpenURL { url in

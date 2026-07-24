@@ -9,7 +9,6 @@ import SwiftUI
 import Observation
 
 enum AppRoute: Hashable {
-    case converstationList
     case chat(converstationID: String)
     case profile(userID: String)
 }

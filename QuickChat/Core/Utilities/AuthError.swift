@@ -13,24 +13,26 @@ enum AuthError: LocalizedError, Equatable {
     case weakPassword
     case emailAlreadyInUse
     case wrongPassword
+    case wrongCurrentPassword
     case userNotFound
     case network
     case appleSignInFailed
     case googleSignInFailed
     case googleClientIDMissing
     case unknown(String)
-    
+
     var errorDescription: String? {
         switch self {
-        case .invalidEmail: return "Email không hợp lệ."
-        case .weakPassword: return "Mật khẩu cần tối thiểu \(Constants.Validation.minPasswordLength) ký tự, có ít nhất 1 chữ hoa và 1 chữ số."
-        case .emailAlreadyInUse: return "Email này đã được đăng ký."
-        case .wrongPassword: return "Sai email hoặc mật khẩu."
-        case .userNotFound: return "Tài khoản không tồn tại."
-        case .network: return "Lỗi kết nối mạng. Vui lòng thử lại."
-        case .appleSignInFailed: return "Đăng nhập với Apple thất bại. Vui lòng thử lại."
-        case .googleSignInFailed: return "Đăng nhập với Google thất bại. Vui lòng thử lại."
-        case .googleClientIDMissing: return "Chưa cấu hình Google Sign-In cho project này (thiếu CLIENT_ID trong GoogleService-Info.plist)."
+        case .invalidEmail: return L10n.AuthError.invalidEmail
+        case .weakPassword: return L10n.AuthError.weakPassword(minLength: Constants.Validation.minPasswordLength)
+        case .emailAlreadyInUse: return L10n.AuthError.emailAlreadyInUse
+        case .wrongPassword: return L10n.AuthError.wrongPassword
+        case .wrongCurrentPassword: return L10n.AuthError.wrongCurrentPassword
+        case .userNotFound: return L10n.AuthError.userNotFound
+        case .network: return L10n.AuthError.network
+        case .appleSignInFailed: return L10n.AuthError.appleSignInFailed
+        case .googleSignInFailed: return L10n.AuthError.googleSignInFailed
+        case .googleClientIDMissing: return L10n.AuthError.googleClientIDMissing
         case .unknown(let message): return message
         }
     }

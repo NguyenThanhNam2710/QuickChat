@@ -26,7 +26,7 @@ struct SignUpView: View {
                 viewModel = AuthViewModel(authService: authService)
             }
         }
-        .navigationTitle("Đăng ký")
+        .navigationTitle(L10n.Auth.signUpTitle)
         
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -40,20 +40,20 @@ struct SignUpView: View {
         
         ScrollView {
             VStack(spacing: Spacing.md) {
-                TextField("Tên hiển thị", text: $viewModel.displayName)
+                TextField(L10n.Auth.displayNamePlaceholder, text: $viewModel.displayName)
                     .textFieldStyle(.roundedBorder)
                 
-                TextField("Email", text: $viewModel.email)
+                TextField(L10n.Common.email, text: $viewModel.email)
 #if os(iOS)
                     .textInputAutocapitalization(.never)
                     .keyboardType(.emailAddress)
 #endif
                     .textFieldStyle(.roundedBorder)
                 
-                SecureField("Mật khẩu (≥8 ký tự, có chữ hoa & số)", text: $viewModel.password)
+                SecureField(L10n.Auth.signUpPasswordPlaceholder, text: $viewModel.password)
                     .textFieldStyle(.roundedBorder)
                 
-                SecureField("Xác nhận mật khẩu", text: $viewModel.confirmPassword)
+                SecureField(L10n.Auth.confirmPasswordPlaceholder, text: $viewModel.confirmPassword)
                     .textFieldStyle(.roundedBorder)
                 
                 if let errorMessage = viewModel.errorMessage {
@@ -69,7 +69,7 @@ struct SignUpView: View {
                         if viewModel.isLoading {
                             ProgressView()
                         } else {
-                            Text("Tạo tài khoản")
+                            Text(L10n.Auth.signUpButton)
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -92,7 +92,7 @@ struct SignUpView: View {
         }
         .onChange(of: viewModel.didSignUpSuccessfully) { _, success in
             if success {
-                toastCenter.show("Tạo tài khoản thành công!", type: .success)
+                toastCenter.show(L10n.Auth.signUpSuccessToast, type: .success)
                 dismiss()
             }
         }

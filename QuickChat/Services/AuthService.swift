@@ -25,6 +25,10 @@ final class AuthService: AuthServiceProtocol {
         auth.currentUser.map(Self.mapFirebaseUser)
     }
     
+    var signInProviders: [String] {
+        auth.currentUser?.providerData.map(\.providerID) ?? []
+    }
+    
     // MARK: - Auth State Stream
     var authStateStream: AsyncStream<User?> {
         AsyncStream { continuation in
@@ -183,6 +187,47 @@ final class AuthService: AuthServiceProtocol {
             .rootViewController
     }
 #endif
+    
+    // MARK: - Update
+    func updateDisplayName(_ displayName: String) async throws -> User {
+        try await AppLogger.auth.logCall(
+            "updateDisplayName",
+            header: ["sdk": "FirebaseAuth"],
+            body: ["displayName": displayName],
+            response: { user in ["uid": user.id, "displayName": user.displayName ?? "nil"] }
+        ) {
+            guard let firebaseUser = auth.currentUser else {
+                throw AuthError.userNotFound
+            }
+            do {
+                let changeRequest = firebaseUser.createProfileChangeRequest()
+                changeRequest.displayName = displayName
+                try await changeRequest.commitChanges()
+                return Self.mapFirebaseUser(firebaseUser, overrideDisplayName: displayName)
+            } catch {
+                throw AuthError.map(error)
+            }
+        }
+    }
+    
+    func updatePassword(currentPassword: String, newPassword: String) async throws {
+        AppLogger.auth.info("┌─ → updatePassword  header: {\"sdk\": \"FirebaseAuth\"}")
+        guard let firebaseUser = auth.currentUser, let email = firebaseUser.email else {
+            AppLogger.auth.error("└─ ✗ updatePassword thất bại — thiếu currentUser/email")
+            throw AuthError.userNotFound
+        }
+        do {
+            // Bắt buộc reauthenticate trước — Firebase từ chối updatePassword nếu phiên đăng nhập
+            // đã "cũ" (không phải vừa mới login), báo lỗi requiresRecentLogin.
+            let credential = EmailAuthProvider.credential(withEmail: email, password: currentPassword)
+            try await firebaseUser.reauthenticate(with: credential)
+            try await firebaseUser.updatePassword(to: newPassword)
+            AppLogger.auth.info("└─ ✓ updatePassword thành công")
+        } catch {
+            AppLogger.auth.error("└─ ✗ updatePassword thất bại — \(error.localizedDescription, privacy: .public)")
+            throw AuthError.map(error)
+        }
+    }
     
     // MARK: - Mapping
     private static func mapFirebaseUser(_ firebaseUser: FirebaseAuth.User, overrideDisplayName: String? = nil) -> User {
