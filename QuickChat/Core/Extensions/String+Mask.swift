@@ -14,6 +14,6 @@ extension String {
         let name = self[..<atIndex]
         let domain = self[atIndex...]
         guard name.count > 2  else { return "***" + domain }
-        return "\(name.prefix(2))***\(domain))"
+        return "\(name.prefix(2))***\(domain)"
     }
 }

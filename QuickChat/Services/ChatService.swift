@@ -19,7 +19,6 @@ final class ChatService: ChatServiceProtocol {
                 .addSnapshotListener { snapshot, error in
                     if let error {
                         AppLogger.chat.error("observeConversations lỗi: \(error.localizedDescription, privacy: .public)")
-                        continuation.yield([])
                         return
                     }
                     guard let snapshot else {
