@@ -10,9 +10,9 @@ import CryptoKit
 
 enum CryptoUtils {
     /// Sinh chuỗi ngẫu nhiên an toàn để làm nonce.
-    static func randomNonceString(lenght: Int = 32) -> String {
-        precondition(lenght > 0)
-        var randomBytes = [UInt8](repeating: 0, count: lenght)
+    static func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        var randomBytes = [UInt8](repeating: 0, count: length)
         let status = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
         if status != errSecSuccess {
             fatalError("Không thể sinh nonce ngẫu nhiên (SecRandomCopyBytes status: \(status)).")
