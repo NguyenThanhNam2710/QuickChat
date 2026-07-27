@@ -98,4 +98,113 @@ final class ChatService: ChatServiceProtocol {
     private static func conversationID(for participantIDs: [String]) -> String {
         participantIDs.sorted().joined(separator: "_")
     }
+    
+    private func messagesCollection(conversationID: String) -> CollectionReference {
+        db.collection(Constants.Firestore.conversationsCollection)
+            .document(conversationID)
+            .collection(Constants.Firestore.messagesSubcollectionName)
+    }
+
+    func observeLatestMessages(conversationID: String, limit: Int) -> AsyncStream<[MessageSnapshot]> {
+        AsyncStream { continuation in
+            let listener = messagesCollection(conversationID: conversationID)
+                .order(by: "timestamp", descending: true)
+                .limit(to: limit)
+                .addSnapshotListener(includeMetadataChanges: true) { snapshot, error in
+                    if let error {
+                        AppLogger.chat.error("observeLatestMessages lỗi: \(error.localizedDescription, privacy: .public)")
+                        // KHÔNG yield rỗng — giữ nguyên tin nhắn đang hiển thị, tránh xóa UI vì lỗi tạm thời.
+                        return
+                    }
+                    guard let snapshot else { return }
+                    let items = snapshot.documents.compactMap { doc -> MessageSnapshot? in
+                        guard let message = Self.mapMessage(id: doc.documentID, data: doc.data()) else { return nil }
+                        return MessageSnapshot(message: message, isPending: doc.metadata.hasPendingWrites)
+                    }
+                    // Query order descending (mới→cũ) để limit lấy đúng N tin GẦN NHẤT — đảo lại cho UI (cũ→mới).
+                    continuation.yield(items.reversed())
+                }
+            continuation.onTermination = { _ in listener.remove() }
+        }
+    }
+
+    func loadOlderMessages(conversationID: String, before: Date, limit: Int) async throws -> [Message] {
+        let snapshot = try await messagesCollection(conversationID: conversationID)
+            .order(by: "timestamp", descending: true)
+            .whereField("timestamp", isLessThan: Timestamp(date: before))
+            .limit(to: limit)
+            .getDocuments()
+        let messages = snapshot.documents.compactMap { Self.mapMessage(id: $0.documentID, data: $0.data()) }
+        return messages.reversed()
+    }
+
+    func sendMessage(conversationID: String, clientMessageID: String, senderID: String, text: String, otherUserID: String) async throws {
+        try await AppLogger.chat.logCall(
+            "sendMessage",
+            header: ["sdk": "Firestore"],
+            body: ["conversationID": conversationID, "senderID": senderID]
+        ) {
+            let messageRef = messagesCollection(conversationID: conversationID).document(clientMessageID)
+            let conversationRef = db.collection(Constants.Firestore.conversationsCollection).document(conversationID)
+
+            let batch = db.batch()
+            batch.setData([
+                "senderID": senderID,
+                "text": text,
+                "timestamp": FieldValue.serverTimestamp(),
+                "status": MessageStatus.sent.rawValue,
+                "imageURL": NSNull()
+            ], forDocument: messageRef)
+
+            batch.updateData([
+                "lastMessage": text,
+                "lastMessageDate": FieldValue.serverTimestamp(),
+                "unreadCounts.\(otherUserID)": FieldValue.increment(Int64(1))
+            ], forDocument: conversationRef)
+
+            try await batch.commit()
+        }
+    }
+
+    func markMessagesAsRead(conversationID: String, currentUserID: String) async throws {
+        let conversationRef = db.collection(Constants.Firestore.conversationsCollection).document(conversationID)
+
+        let snapshot = try await messagesCollection(conversationID: conversationID)
+            .whereField("senderID", isNotEqualTo: currentUserID)
+            .whereField("status", isEqualTo: MessageStatus.sent.rawValue)
+            .getDocuments()
+
+        let batch = db.batch()
+        for doc in snapshot.documents {
+            batch.updateData(["status": MessageStatus.read.rawValue], forDocument: doc.reference)
+        }
+        // Luôn reset unreadCounts về 0 dù không có message nào cần đổi status,
+        // tránh lệch đếm nếu có race condition với sendMessage của phía kia.
+        batch.updateData(["unreadCounts.\(currentUserID)": 0], forDocument: conversationRef)
+        try await batch.commit()
+    }
+
+    // MARK: - Mapping message
+    private static func mapMessage(id: String, data: [String: Any]) -> Message? {
+        guard
+            let senderID = data["senderID"] as? String,
+            let text = data["text"] as? String,
+            let statusRaw = data["status"] as? String,
+            let status = MessageStatus(rawValue: statusRaw)
+        else {
+            AppLogger.chat.error("Bỏ qua message \(id, privacy: .public) — thiếu field bắt buộc")
+            return nil
+        }
+        // Tin vừa gửi (serverTimestamp chưa resolve khi offline) chưa có "timestamp" thật — fallback Date()
+        // để không bị loại khỏi danh sách hiển thị trong lúc chờ đồng bộ.
+        let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() ?? Date()
+        return Message(
+            id: id,
+            senderID: senderID,
+            text: text,
+            timestamp: timestamp,
+            status: status,
+            imageURL: data["imageURL"] as? String
+        )
+    }
 }

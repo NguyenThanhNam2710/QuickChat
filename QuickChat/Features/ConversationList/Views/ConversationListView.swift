@@ -63,8 +63,8 @@ struct ConversationListView: View {
             }
         }
         .sheet(isPresented: $showNewConversation) {
-            NewConversationView { conversationID in
-                router.push(.chat(converstationID: conversationID))
+            NewConversationView { conversationID, otherUserID in
+                router.push(.chat(conversationID: conversationID, otherUserID: otherUserID))
             }
         }
     }
@@ -83,7 +83,8 @@ struct ConversationListView: View {
         } else {
             List(viewModel.items) { item in
                 Button {
-                    router.push(.chat(converstationID: item.conversation.id))
+                    guard let otherID = item.conversation.otherParticipantID(currentUserID: item.currentUserID) else { return }
+                    router.push(.chat(conversationID: item.conversation.id, otherUserID: otherID))
                 } label: {
                     ConversationRowView(item: item)
                 }

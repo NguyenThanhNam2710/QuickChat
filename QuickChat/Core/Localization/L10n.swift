@@ -19,6 +19,7 @@ enum L10n {
         static var loading: String { t("common.loading", "Đang tải...") }
         static var email: String { t("common.email", "Email") }
         static var passwordMismatch: String { t("common.passwordMismatch", "Mật khẩu xác nhận không khớp.") }
+        static var offlineBanner: String { t("common.offlineBanner", "Mất kết nối mạng") }
     }
     
     enum DateTime {
@@ -113,5 +114,12 @@ enum L10n {
         static var languagePickerLabel: String { t("settings.languagePickerLabel", "Chọn ngôn ngữ") }
         static var languageFooter: String { t("settings.languageFooter", "Áp dụng ngay lập tức, không cần khởi động lại ứng dụng.") }
         static var languageSystem: String { t("settings.languageSystem", "Theo hệ thống") }
+    }
+    
+    enum Chat {
+        static var title: String { t("chat.title", "Trò chuyện") }
+        static var inputPlaceholder: String { t("chat.inputPlaceholder", "Nhập tin nhắn...") }
+        static var retrySend: String { t("chat.retrySend", "Gửi lại") }
+        static var messageTooLong: String { t("chat.messageTooLong", "Tin nhắn quá dài.") }
     }
 }

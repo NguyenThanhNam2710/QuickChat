@@ -41,8 +41,8 @@ struct RootView: View {
     @ViewBuilder
     private func destinationView(for route: AppRoute) -> some View {
         switch route {
-        case .chat(let converstationID):
-            PlaceholderView(title: "Chat", subTitle: "ConverstationID: \(converstationID) - phase 4")
+        case .chat(let conversationID, let otherUserID):
+            ChatView(conversationID: conversationID, otherUserID: otherUserID)
         case .profile(_):
             ProfileView()
         }

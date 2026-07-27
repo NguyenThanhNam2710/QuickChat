@@ -16,7 +16,7 @@ struct NewConversationView: View {
 
     /// Gọi khi tạo/lấy conversation thành công — parent (ConversationListView) chịu trách nhiệm
     /// đóng sheet này và push route sang ChatView, giữ NewConversationView không biết gì về AppRouter.
-    let onConversationCreated: (String) -> Void
+    let onConversationCreated: (String, String) -> Void
 
     var body: some View {
         NavigationStack {
@@ -94,7 +94,7 @@ struct NewConversationView: View {
                             Button(L10n.NewConversation.startChatButton) {
                                 Task {
                                     if let conversationID = await viewModel.startConversation() {
-                                        onConversationCreated(conversationID)
+                                        onConversationCreated(conversationID, foundUser.id)
                                         dismiss()
                                     }
                                 }

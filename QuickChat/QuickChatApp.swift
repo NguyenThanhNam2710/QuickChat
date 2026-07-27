@@ -19,6 +19,9 @@ struct QuickChatApp: App {
     @State private var toastCenter = ToastCenter()
     @State private var alertCenter = AlertCenter()
     
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var networkMonitor = NetworkMonitor()
+    
     private let authService: AuthServiceProtocol
     private let chatService: ChatServiceProtocol
     private let userService: UserServiceProtocol
@@ -37,9 +40,11 @@ struct QuickChatApp: App {
         WindowGroup {
             RootView()
                 .id(LocalizationManager.shared.currentLanguage)
+                .offlineBanner()
                 .toastOverlay()
                 .alertPresenter()
                 .environment(appState)
+                .environment(networkMonitor)
                 .environment(router)
                 .environment(toastCenter)
                 .environment(alertCenter)
@@ -48,6 +53,11 @@ struct QuickChatApp: App {
                 .environment(\.userService, userService)
                 .task {
                     await appState.observeAuthState(authService, userService: userService)
+                }
+                .onChange(of: scenePhase) { _, newPhase in
+                    if newPhase == .active {
+                        networkMonitor.refreshCurrentPathStatus()
+                    }
                 }
 #if os(iOS)
                 .onOpenURL { url in

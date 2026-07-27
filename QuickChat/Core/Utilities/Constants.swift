@@ -19,6 +19,7 @@ enum Constants {
         static let minPasswordLength = 8
         static let passwordRegex = "^(?=.*[A-Z])(?=.*[0-9]).{8,}$"
         static let emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+        static let maxMessageLength = 2000
     }
     
     enum Pagination {

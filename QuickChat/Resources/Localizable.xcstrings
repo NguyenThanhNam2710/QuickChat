@@ -396,6 +396,74 @@
         }
       }
     },
+    "chat.inputPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type a message..."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nhập tin nhắn..."
+          }
+        }
+      }
+    },
+    "chat.messageTooLong" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message is too long."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin nhắn quá dài."
+          }
+        }
+      }
+    },
+    "chat.retrySend" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi lại"
+          }
+        }
+      }
+    },
+    "chat.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trò chuyện"
+          }
+        }
+      }
+    },
     "chatTime.justNow" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -490,6 +558,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang tải..."
+          }
+        }
+      }
+    },
+    "common.offlineBanner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\tNo internet connection"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mất kết nối mạng"
           }
         }
       }
