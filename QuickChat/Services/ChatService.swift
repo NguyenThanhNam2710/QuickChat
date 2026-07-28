@@ -138,24 +138,31 @@ final class ChatService: ChatServiceProtocol {
         return messages.reversed()
     }
 
-    func sendMessage(conversationID: String, clientMessageID: String, senderID: String, text: String, otherUserID: String) async throws {
+    func sendMessage(conversationID: String, clientMessageID: String, senderID: String, text: String, otherUserID: String, replyTo: MessageReplyContext?) async throws {
         try await AppLogger.chat.logCall(
             "sendMessage",
             header: ["sdk": "Firestore"],
-            body: ["conversationID": conversationID, "senderID": senderID]
+            body: ["conversationID": conversationID, "senderID": senderID, "hasReply": replyTo != nil]
         ) {
             let messageRef = messagesCollection(conversationID: conversationID).document(clientMessageID)
             let conversationRef = db.collection(Constants.Firestore.conversationsCollection).document(conversationID)
 
-            let batch = db.batch()
-            batch.setData([
+            let messageData: [String: Any] = [
                 "senderID": senderID,
                 "text": text,
                 "timestamp": FieldValue.serverTimestamp(),
                 "status": MessageStatus.sent.rawValue,
-                "imageURL": NSNull()
-            ], forDocument: messageRef)
+                "imageURL": NSNull(),
+                "reactions": [String: String](),
+                "isEdited": false,
+                "isRecalled": false,
+                "replyToMessageID": replyTo?.messageID as Any? ?? NSNull(),
+                "replyToSenderID": replyTo?.preview.senderID as Any? ?? NSNull(),
+                "replyToText": replyTo?.preview.text as Any? ?? NSNull()
+            ]
 
+            let batch = db.batch()
+            batch.setData(messageData, forDocument: messageRef)
             batch.updateData([
                 "lastMessage": text,
                 "lastMessageDate": FieldValue.serverTimestamp(),
@@ -163,6 +170,37 @@ final class ChatService: ChatServiceProtocol {
             ], forDocument: conversationRef)
 
             try await batch.commit()
+        }
+    }
+
+    func editMessage(conversationID: String, messageID: String, newText: String) async throws {
+        try await AppLogger.chat.logCall(
+            "editMessage", header: ["sdk": "Firestore"],
+            body: ["conversationID": conversationID, "messageID": messageID]
+        ) {
+            try await messagesCollection(conversationID: conversationID)
+                .document(messageID)
+                .updateData(["text": newText, "isEdited": true])
+        }
+    }
+
+    func recallMessage(conversationID: String, messageID: String) async throws {
+        try await AppLogger.chat.logCall(
+            "recallMessage", header: ["sdk": "Firestore"],
+            body: ["conversationID": conversationID, "messageID": messageID]
+        ) {
+            try await messagesCollection(conversationID: conversationID)
+                .document(messageID)
+                .updateData(["text": "", "imageURL": NSNull(), "isRecalled": true])
+        }
+    }
+
+    func setReaction(conversationID: String, messageID: String, userID: String, emoji: String?) async throws {
+        let ref = messagesCollection(conversationID: conversationID).document(messageID)
+        if let emoji {
+            try await ref.updateData(["reactions.\(userID)": emoji])
+        } else {
+            try await ref.updateData(["reactions.\(userID)": FieldValue.delete()])
         }
     }
 
@@ -195,16 +233,26 @@ final class ChatService: ChatServiceProtocol {
             AppLogger.chat.error("Bỏ qua message \(id, privacy: .public) — thiếu field bắt buộc")
             return nil
         }
-        // Tin vừa gửi (serverTimestamp chưa resolve khi offline) chưa có "timestamp" thật — fallback Date()
-        // để không bị loại khỏi danh sách hiển thị trong lúc chờ đồng bộ.
         let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() ?? Date()
+
+        var replyTo: ReplyPreview?
+        if let replySender = data["replyToSenderID"] as? String,
+           let replyText = data["replyToText"] as? String {
+            replyTo = ReplyPreview(senderID: replySender, text: replyText)
+        }
+
         return Message(
             id: id,
             senderID: senderID,
             text: text,
             timestamp: timestamp,
             status: status,
-            imageURL: data["imageURL"] as? String
+            imageURL: data["imageURL"] as? String,
+            replyToMessageID: data["replyToMessageID"] as? String,
+            replyTo: replyTo,
+            reactions: data["reactions"] as? [String: String] ?? [:],
+            isEdited: data["isEdited"] as? Bool ?? false,
+            isRecalled: data["isRecalled"] as? Bool ?? false
         )
     }
 }

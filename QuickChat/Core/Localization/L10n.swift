@@ -121,5 +121,15 @@ enum L10n {
         static var inputPlaceholder: String { t("chat.inputPlaceholder", "Nhập tin nhắn...") }
         static var retrySend: String { t("chat.retrySend", "Gửi lại") }
         static var messageTooLong: String { t("chat.messageTooLong", "Tin nhắn quá dài.") }
+        static var reply: String { t("chat.reply", "Trả lời") }
+        static var edit: String { t("chat.edit", "Chỉnh sửa") }
+        static var recall: String { t("chat.recall", "Thu hồi") }
+        static var react: String { t("chat.react", "Thả cảm xúc") }
+        static var recalledMessage: String { t("chat.recalledMessage", "Tin nhắn đã được thu hồi") }
+        static var editedSuffix: String { t("chat.editedSuffix", "(đã chỉnh sửa)") }
+        static var replyToYou: String { t("chat.replyToYou", "Trả lời bạn") }
+        static var replyToOther: String { t("chat.replyToOther", "Trả lời") }
+        static var replyingToLabel: String { t("chat.replyingToLabel", "Đang trả lời") }
+        static var editingLabel: String { t("chat.editingLabel", "Đang chỉnh sửa tin nhắn") }
     }
 }

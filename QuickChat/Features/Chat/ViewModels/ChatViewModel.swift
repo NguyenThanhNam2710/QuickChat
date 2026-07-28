@@ -17,6 +17,9 @@ final class ChatViewModel {
     private(set) var hasMoreOlder = true
     var draftText: String = ""
     var errorMessage: String?
+    
+    var replyingTo: ChatMessageItem?
+    var editingItem: ChatMessageItem?
 
     let conversationID: String
     let currentUserID: String
@@ -95,6 +98,8 @@ final class ChatViewModel {
         }
     }
 
+    // MARK: - sendMessage/retrySend/send
+    
     func sendMessage() {
         let trimmed = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
@@ -102,23 +107,37 @@ final class ChatViewModel {
             errorMessage = L10n.Chat.messageTooLong
             return
         }
+        let replyContext = replyingTo.map {
+            MessageReplyContext(messageID: $0.id, preview: ReplyPreview(senderID: $0.message.senderID, text: $0.message.text))
+        }
         draftText = ""
-        send(text: trimmed)
+        replyingTo = nil
+        send(text: trimmed, replyContext: replyContext)
     }
 
     func retrySend(itemID: String) {
         guard let failedMessage = pendingLocalMessages[itemID] else { return }
         failedMessageIDs.remove(itemID)
-        send(text: failedMessage.text, existingID: itemID)
+        let replyContext = failedMessage.replyToMessageID.flatMap { id in
+            failedMessage.replyTo.map { MessageReplyContext(messageID: id, preview: $0) }
+        }
+        send(text: failedMessage.text, existingID: itemID, replyContext: replyContext)
     }
 
-    private func send(text: String, existingID: String? = nil) {
+    private func send(text: String, existingID: String? = nil, replyContext: MessageReplyContext? = nil) {
         let id = existingID ?? UUID().uuidString
-        let localMessage = Message(id: id, senderID: currentUserID, text: text, timestamp: Date(), status: .sent, imageURL: nil)
+        let localMessage = Message(
+            id: id,
+            senderID: currentUserID,
+            text: text,
+            timestamp: Date(),
+            status: .sent,
+            imageURL: nil,
+            replyToMessageID: replyContext?.messageID,
+            replyTo: replyContext?.preview
+        )
         pendingLocalMessages[id] = localMessage
 
-        // Optimistic UI: chèn ngay, không chờ Firestore — snapshot listener sẽ tự cập nhật isPending
-        // ngay khi write được áp vào local cache (gần như tức thời, độc lập với có mạng hay không).
         if let index = items.firstIndex(where: { $0.id == id }) {
             items[index] = ChatMessageItem(message: localMessage, isPending: true, hasFailed: false)
         } else {
@@ -132,17 +151,84 @@ final class ChatViewModel {
                     clientMessageID: id,
                     senderID: currentUserID,
                     text: text,
-                    otherUserID: otherUserID
+                    otherUserID: otherUserID,
+                    replyTo: replyContext
                 )
                 pendingLocalMessages.removeValue(forKey: id)
             } catch {
-                // Lỗi THẬT (rules chặn, dữ liệu sai...) — KHÔNG phải do offline, vì offline thì
-                // hasPendingWrites tự lo, write chỉ throw ở đây khi server thật sự từ chối.
                 failedMessageIDs.insert(id)
                 if let index = items.firstIndex(where: { $0.id == id }) {
                     items[index].hasFailed = true
                 }
                 AppLogger.chat.error("sendMessage thất bại (id: \(id, privacy: .public)) — \(error.localizedDescription, privacy: .public)")
+            }
+        }
+    }
+    
+    // MARK: - Reply
+
+    func startReply(to item: ChatMessageItem) {
+        guard !item.message.isRecalled else { return }
+        editingItem = nil
+        replyingTo = item
+    }
+
+    func cancelReply() {
+        replyingTo = nil
+    }
+
+    // MARK: - Edit
+
+    func startEdit(item: ChatMessageItem) {
+        guard item.message.senderID == currentUserID, !item.message.isRecalled else { return }
+        replyingTo = nil
+        editingItem = item
+        draftText = item.message.text
+    }
+
+    func cancelEdit() {
+        editingItem = nil
+        draftText = ""
+    }
+
+    func submitEdit() async {
+        guard let editingItem else { return }
+        let trimmed = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        self.editingItem = nil
+        draftText = ""
+        do {
+            try await chatService.editMessage(conversationID: conversationID, messageID: editingItem.id, newText: trimmed)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Recall
+
+    func recallMessage(item: ChatMessageItem) async {
+        guard item.message.senderID == currentUserID else { return }
+        do {
+            try await chatService.recallMessage(conversationID: conversationID, messageID: item.id)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Reaction
+
+    func toggleReaction(item: ChatMessageItem, emoji: String) {
+        let isRemoving = item.message.reactions[currentUserID] == emoji
+        Task {
+            do {
+                try await chatService.setReaction(
+                    conversationID: conversationID,
+                    messageID: item.id,
+                    userID: currentUserID,
+                    emoji: isRemoving ? nil : emoji
+                )
+            } catch {
+                AppLogger.chat.error("setReaction lỗi: \(error.localizedDescription, privacy: .public)")
             }
         }
     }

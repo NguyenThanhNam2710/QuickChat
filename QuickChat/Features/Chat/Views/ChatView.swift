@@ -61,7 +61,12 @@ struct ChatView: View {
                             MessageBubbleView(
                                 item: item,
                                 isOutgoing: item.message.senderID == viewModel.currentUserID,
-                                onRetry: { viewModel.retrySend(itemID: item.id) }
+                                currentUserID: viewModel.currentUserID,
+                                onRetry: { viewModel.retrySend(itemID: item.id) },
+                                onReply: { viewModel.startReply(to: item) },
+                                onEdit: { viewModel.startEdit(item: item) },
+                                onRecall: { Task { await viewModel.recallMessage(item: item) } },
+                                onReact: { emoji in viewModel.toggleReaction(item: item, emoji: emoji) }
                             )
                             .id(item.id)
                         }
@@ -86,7 +91,28 @@ struct ChatView: View {
                     .padding(.horizontal, Spacing.md)
             }
 
-            MessageInputBarView(text: $viewModel.draftText, onSend: viewModel.sendMessage)
+            if let replyingTo = viewModel.replyingTo {
+                ComposerContextBanner(
+                    title: L10n.Chat.replyingToLabel,
+                    preview: replyingTo.message.text,
+                    onCancel: { viewModel.cancelReply() }
+                )
+            }
+            if viewModel.editingItem != nil {
+                ComposerContextBanner(
+                    title: L10n.Chat.editingLabel,
+                    preview: viewModel.draftText,
+                    onCancel: { viewModel.cancelEdit() }
+                )
+            }
+
+            MessageInputBarView(text: $viewModel.draftText) {
+                if viewModel.editingItem != nil {
+                    Task { await viewModel.submitEdit() }
+                } else {
+                    viewModel.sendMessage()
+                }
+            }
         }
         .background(AppColor.background)
     }
