@@ -64,3 +64,14 @@ struct ChatMessageItem: Identifiable, Equatable {
     var hasFailed: Bool
     var id: String { message.id }
 }
+
+extension Message {
+    /// Chỉ được sửa nội dung trong vòng 30 phút kể từ lúc gửi.
+    var isEditWindowOpen: Bool {
+        Date().timeIntervalSince(timestamp) <= 30 * 60
+    }
+    /// Chỉ được thu hồi trong vòng 15 phút kể từ lúc gửi.
+    var isRecallWindowOpen: Bool {
+        Date().timeIntervalSince(timestamp) <= 15 * 60
+    }
+}

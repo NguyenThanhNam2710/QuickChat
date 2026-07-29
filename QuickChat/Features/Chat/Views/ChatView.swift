@@ -9,7 +9,9 @@ import SwiftUI
 
 struct ChatView: View {
     @Environment(\.chatService) private var chatService
+    @Environment(\.userService) private var userService
     @Environment(AppState.self) private var appState
+    @Environment(ToastCenter.self) private var toastCenter
     @State private var viewModel: ChatViewModel?
 
     let conversationID: String
@@ -23,7 +25,7 @@ struct ChatView: View {
                 ProgressView()
             }
         }
-        .navigationTitle(L10n.Chat.title)
+        .navigationTitle(viewModel?.otherUserDisplayName ?? L10n.Chat.title)
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
 #endif
@@ -33,11 +35,14 @@ struct ChatView: View {
                 conversationID: conversationID,
                 currentUserID: userID,
                 otherUserID: otherUserID,
-                chatService: chatService
+                chatService: chatService,
+                userService: userService
             )
             viewModel = vm
             vm.startObserving()
-            await vm.markAsRead()
+            async let readTask: () = vm.markAsRead()
+            async let profileTask: () = vm.loadOtherUserProfile()
+            _ = await (readTask, profileTask)
         }
     }
 
@@ -52,7 +57,6 @@ struct ChatView: View {
                         if viewModel.isLoadingOlder {
                             ProgressView().padding(.vertical, Spacing.sm)
                         }
-                        // Trigger vô hình ở đầu danh sách — kéo lên chạm tới đây thì tải thêm tin cũ.
                         Color.clear
                             .frame(height: 1)
                             .onAppear { Task { await viewModel.loadOlderMessages() } }
@@ -64,6 +68,10 @@ struct ChatView: View {
                                 currentUserID: viewModel.currentUserID,
                                 onRetry: { viewModel.retrySend(itemID: item.id) },
                                 onReply: { viewModel.startReply(to: item) },
+                                onCopy: {
+                                    copyToPasteboard(item.message.text)
+                                    toastCenter.show(L10n.Chat.copiedToast, type: .success)
+                                },
                                 onEdit: { viewModel.startEdit(item: item) },
                                 onRecall: { Task { await viewModel.recallMessage(item: item) } },
                                 onReact: { emoji in viewModel.toggleReaction(item: item, emoji: emoji) }

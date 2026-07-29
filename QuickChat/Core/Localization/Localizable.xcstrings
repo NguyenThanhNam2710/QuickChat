@@ -396,6 +396,40 @@
         }
       }
     },
+    "chat.copiedToast" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã sao chép"
+          }
+        }
+      }
+    },
+    "chat.copyText" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sao chép"
+          }
+        }
+      }
+    },
     "chat.edit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -443,6 +477,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang chỉnh sửa tin nhắn"
+          }
+        }
+      }
+    },
+    "chat.editWindowExpired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can only edit a message within 30 minutes of sending it."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chỉ có thể chỉnh sửa tin nhắn trong vòng 30 phút sau khi gửi."
           }
         }
       }
@@ -526,6 +577,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tin nhắn đã được thu hồi"
+          }
+        }
+      }
+    },
+    "chat.recallWindowExpired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can only recall a message within 15 minutes of sending it."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chỉ có thể thu hồi tin nhắn trong vòng 15 phút sau khi gửi."
           }
         }
       }

@@ -32,12 +32,17 @@ final class ChatViewModel {
     private var failedMessageIDs: Set<String> = []
     /// Bản sao local của message chưa chắc Firestore đã echo lại kịp — phòng race hiếm gặp.
     private var pendingLocalMessages: [String: Message] = [:]
+    
+    private let userService: UserServiceProtocol
+    private(set) var otherUserDisplayName: String
 
-    init(conversationID: String, currentUserID: String, otherUserID: String, chatService: ChatServiceProtocol) {
+    init(conversationID: String, currentUserID: String, otherUserID: String, chatService: ChatServiceProtocol, userService: UserServiceProtocol) {
         self.conversationID = conversationID
         self.currentUserID = currentUserID
         self.otherUserID = otherUserID
         self.chatService = chatService
+        self.userService = userService
+        self.otherUserDisplayName = L10n.Common.loading
     }
 
     func startObserving() {
@@ -80,6 +85,12 @@ final class ChatViewModel {
         }
     }
 
+    func loadOtherUserProfile() async {
+        guard let user = try? await userService.fetchUser(id: otherUserID),
+              let name = user.displayName, !name.isEmpty else { return }
+        otherUserDisplayName = name
+    }
+    
     func loadOlderMessages() async {
         guard !isLoadingOlder, hasMoreOlder, let oldest = items.first?.message.timestamp else { return }
         isLoadingOlder = true
@@ -181,6 +192,10 @@ final class ChatViewModel {
 
     func startEdit(item: ChatMessageItem) {
         guard item.message.senderID == currentUserID, !item.message.isRecalled else { return }
+        guard item.message.isEditWindowOpen else {
+            errorMessage = L10n.Chat.editWindowExpired
+            return
+        }
         replyingTo = nil
         editingItem = item
         draftText = item.message.text
@@ -208,6 +223,10 @@ final class ChatViewModel {
 
     func recallMessage(item: ChatMessageItem) async {
         guard item.message.senderID == currentUserID else { return }
+        guard item.message.isRecallWindowOpen else {
+            errorMessage = L10n.Chat.recallWindowExpired
+            return
+        }
         do {
             try await chatService.recallMessage(conversationID: conversationID, messageID: item.id)
         } catch {

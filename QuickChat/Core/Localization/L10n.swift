@@ -131,5 +131,9 @@ enum L10n {
         static var replyToOther: String { t("chat.replyToOther", "Trả lời") }
         static var replyingToLabel: String { t("chat.replyingToLabel", "Đang trả lời") }
         static var editingLabel: String { t("chat.editingLabel", "Đang chỉnh sửa tin nhắn") }
+        static var editWindowExpired: String { t("chat.editWindowExpired", "Chỉ có thể chỉnh sửa tin nhắn trong vòng 30 phút sau khi gửi.") }
+        static var recallWindowExpired: String { t("chat.recallWindowExpired", "Chỉ có thể thu hồi tin nhắn trong vòng 15 phút sau khi gửi.") }
+        static var copyText: String { t("chat.copyText", "Sao chép") }
+        static var copiedToast: String { t("chat.copiedToast", "Đã sao chép") }
     }
 }

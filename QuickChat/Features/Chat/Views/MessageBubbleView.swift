@@ -13,16 +13,24 @@ struct MessageBubbleView: View {
     let currentUserID: String
     let onRetry: () -> Void
     let onReply: () -> Void
+    let onCopy: () -> Void
     let onEdit: () -> Void
     let onRecall: () -> Void
     let onReact: (String) -> Void
+    
+    @State private var showReactionPicker = false
 
     var body: some View {
         HStack {
             if isOutgoing { Spacer(minLength: 40) }
 
             VStack(alignment: isOutgoing ? .trailing : .leading, spacing: Spacing.xs) {
+                if showReactionPicker {
+                    reactionPickerBar
+                }
+                
                 bubbleContent
+                
                 if !groupedReactions.isEmpty {
                     reactionRow
                 }
@@ -32,69 +40,78 @@ struct MessageBubbleView: View {
             if !isOutgoing { Spacer(minLength: 40) }
         }
     }
+    
+    private var reactionPickerBar: some View {
+        HStack(spacing: Spacing.sm) {
+            ForEach(MessageReaction.allCases, id: \.rawValue) { reaction in
+                Button {
+                    onReact(reaction.rawValue)
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        showReactionPicker = false
+                    }
+                } label: {
+                    Text(reaction.rawValue)
+                        .font(.title3)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xs)
+        .background(.regularMaterial, in: Capsule())
+        .transition(.scale(scale: 0.85).combined(with: .opacity))
+    }
 
     @ViewBuilder
     private var bubbleContent: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            if let replyTo = item.message.replyTo {
-                replyPreview(replyTo)
-            }
-            if item.message.isRecalled {
-                Text(L10n.Chat.recalledMessage)
-                    .font(AppFont.messageBubble.italic())
-                    .foregroundStyle(isOutgoing ? .white.opacity(0.75) : .secondary)
-            } else {
-                Text(item.message.text)
-                    .font(AppFont.messageBubble)
-            }
-        }
-        .padding(.horizontal, Spacing.sm)
-        .padding(.vertical, Spacing.xs)
-        .background(isOutgoing ? AppColor.outgoingBubble : AppColor.incomingBubble)
-        .foregroundStyle(isOutgoing ? .white : .primary)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .contextMenu {
-            if !item.message.isRecalled {
-                Button {
-                    onReply()
-                } label: {
-                    Label(L10n.Chat.reply, systemImage: "arrowshape.turn.up.left")
-                }
-                if isOutgoing {
+        MessageBubbleContentView(message: item.message, isOutgoing: isOutgoing, currentUserID: currentUserID)
+            .contextMenu {
+                if !item.message.isRecalled {
+//                    ControlGroup {
+//                        ForEach(MessageReaction.allCases, id: \.rawValue) { reaction in
+//                            Button {
+//                                onReact(reaction.rawValue)
+//                            } label: {
+//                                Text(reaction.rawValue)
+//                            }
+//                        }
+//                    }
                     Button {
-                        onEdit()
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            showReactionPicker = true
+                        }
                     } label: {
-                        Label(L10n.Chat.edit, systemImage: "pencil")
+                        Label(L10n.Chat.react, systemImage: "face.smiling")
                     }
-                    Button(role: .destructive) {
-                        onRecall()
+                    
+                    Button {
+                        onReply()
                     } label: {
-                        Label(L10n.Chat.recall, systemImage: "arrow.uturn.backward")
+                        Label(L10n.Chat.reply, systemImage: "arrowshape.turn.up.left")
                     }
-                }
-                Menu {
-                    ForEach(MessageReaction.allCases, id: \.rawValue) { reaction in
-                        Button(reaction.rawValue) { onReact(reaction.rawValue) }
+                    Button {
+                        onCopy()
+                    } label: {
+                        Label(L10n.Chat.copyText, systemImage: "doc.on.doc")
                     }
-                } label: {
-                    Label(L10n.Chat.react, systemImage: "face.smiling")
+                    if isOutgoing {
+                        if item.message.isEditWindowOpen {
+                            Button {
+                                onEdit()
+                            } label: {
+                                Label(L10n.Chat.edit, systemImage: "pencil")
+                            }
+                        }
+                        if item.message.isRecallWindowOpen {
+                            Button(role: .destructive) {
+                                onRecall()
+                            } label: {
+                                Label(L10n.Chat.recall, systemImage: "arrow.uturn.backward")
+                            }
+                        }
+                    }
                 }
             }
-        }
-    }
-
-    private func replyPreview(_ preview: ReplyPreview) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(preview.senderID == currentUserID ? L10n.Chat.replyToYou : L10n.Chat.replyToOther)
-                .font(AppFont.timestamp.weight(.semibold))
-            Text(preview.text)
-                .font(AppFont.caption)
-                .lineLimit(1)
-        }
-        .padding(.horizontal, Spacing.sm)
-        .padding(.vertical, Spacing.xs)
-        .background((isOutgoing ? Color.white : Color.primary).opacity(0.12))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private var groupedReactions: [(emoji: String, count: Int)] {
