@@ -35,6 +35,9 @@ final class ChatViewModel {
     
     private let userService: UserServiceProtocol
     private(set) var otherUserDisplayName: String
+    
+    private var pendingReadMessageIDs: Set<String> = []
+    private var flushReadTask: Task<Void, Never>?
 
     init(conversationID: String, currentUserID: String, otherUserID: String, chatService: ChatServiceProtocol, userService: UserServiceProtocol) {
         self.conversationID = conversationID
@@ -61,8 +64,10 @@ final class ChatViewModel {
     func stopObserving() {
         observeTask?.cancel()
         observeTask = nil
+        flushReadTask?.cancel()
+        flushReadTask = nil
     }
-
+    
     private func handle(_ snapshots: [MessageSnapshot]) {
         isLoadingInitial = false
         var merged = snapshots.map { snap in
@@ -74,14 +79,34 @@ final class ChatViewModel {
         }
         items = merged.sorted { $0.message.timestamp < $1.message.timestamp }
     }
+    
+    func markVisible(_ item: ChatMessageItem) {
+        guard item.message.senderID != currentUserID else { return }
+        guard !item.isPending else { return } // chỉ đánh dấu tin đã đồng bộ thật lên server
+        guard item.message.readBy[currentUserID] == nil else { return }
+        pendingReadMessageIDs.insert(item.id)
+        scheduleFlushReads()
+    }
 
-    func markAsRead() async {
-        guard items.contains(where: { $0.message.senderID != currentUserID && $0.message.status == .sent }) else { return }
+    private func scheduleFlushReads() {
+        guard flushReadTask == nil else { return }
+        flushReadTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(400))
+            await self?.flushPendingReads()
+        }
+    }
+
+    private func flushPendingReads() async {
+        flushReadTask = nil
+        guard !pendingReadMessageIDs.isEmpty else { return }
+        let ids = Array(pendingReadMessageIDs)
+        pendingReadMessageIDs.removeAll()
         do {
-            try await chatService.markMessagesAsRead(conversationID: conversationID, currentUserID: currentUserID)
+            try await chatService.markMessagesAsRead(conversationID: conversationID, messageIDs: ids, currentUserID: currentUserID)
         } catch {
-            // Không cần báo người dùng — không ảnh hưởng luồng gửi/nhận, sẽ tự thử lại khi mở màn hình lần sau.
-            AppLogger.chat.error("markAsRead lỗi: \(error.localizedDescription, privacy: .public)")
+            // Không đưa lại `ids` vào pendingReadMessageIDs để tránh vòng lặp lỗi vô hạn —
+            // bubble sẽ tự đánh dấu lại nếu xuất hiện lần nữa (vd mở lại ChatView).
+            AppLogger.chat.error("markMessagesAsRead lỗi: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -142,7 +167,6 @@ final class ChatViewModel {
             senderID: currentUserID,
             text: text,
             timestamp: Date(),
-            status: .sent,
             imageURL: nil,
             replyToMessageID: replyContext?.messageID,
             replyTo: replyContext?.preview

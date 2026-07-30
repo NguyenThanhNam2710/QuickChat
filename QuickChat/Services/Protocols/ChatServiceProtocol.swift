@@ -28,18 +28,19 @@ protocol ChatServiceProtocol {
     /// `clientMessageID` do ViewModel sinh trước (UUID) để Optimistic UI và dữ liệu thật dùng chung 1 ID.
     /// `replyTo` = nil nếu gửi tin nhắn thường, có giá trị nếu đang trả lời 1 tin khác.
     func sendMessage(conversationID: String, clientMessageID: String, senderID: String, text: String, otherUserID: String, replyTo: MessageReplyContext?) async throws
-
+    
     /// Sửa nội dung tin nhắn — chỉ chủ tin nhắn được sửa, KHÔNG giới hạn thời gian (đã chốt).
     func editMessage(conversationID: String, messageID: String, newText: String) async throws
-
+    
     /// Thu hồi tin nhắn — ghi đè text/imageURL trên server, đặt isRecalled = true.
     func recallMessage(conversationID: String, messageID: String) async throws
-
+    
     /// Đặt/gỡ reaction của 1 user cho 1 tin nhắn. Truyền emoji = nil để gỡ.
     func setReaction(conversationID: String, messageID: String, userID: String, emoji: String?) async throws
     
-    /// Đánh dấu toàn bộ tin nhắn CHƯA đọc (gửi bởi người khác) trong conversation là đã đọc,
-    /// đồng thời reset unreadCounts của currentUserID về 0.
-    func markMessagesAsRead(conversationID: String, currentUserID: String) async throws
-    
+    /// `currentUserID` xem — ghi `readBy.{currentUserID} = serverTimestamp()` cho từng tin,
+    /// reset unreadCounts của currentUserID về 0 trong CÙNG 1 batch.
+    /// Gọi theo đợt nhỏ (debounce ở ViewModel) khi bubble THẬT SỰ xuất hiện trên màn hình —
+    /// khác hẳn bản cũ "mở ChatView là đánh dấu đọc hết".
+    func markMessagesAsRead(conversationID: String, messageIDs: [String], currentUserID: String) async throws
 }

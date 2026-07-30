@@ -7,11 +7,6 @@
 
 import Foundation
 
-enum MessageStatus: String, Codable {
-    case sent
-    case read
-}
-
 /// Bản chụp tĩnh của tin nhắn được trả lời — CỐ Ý không tự cập nhật nếu tin gốc
 /// bị sửa/thu hồi sau đó (trade-off đã chốt ở GiaiDoan5-KeHoach.md, mục STT1).
 struct ReplyPreview: Codable, Equatable {
@@ -40,7 +35,6 @@ struct Message: Identifiable, Codable, Equatable {
     let senderID: String
     var text: String
     var timestamp: Date
-    var status: MessageStatus
     var imageURL: String?
     var replyToMessageID: String?
     var replyTo: ReplyPreview?
@@ -50,6 +44,10 @@ struct Message: Identifiable, Codable, Equatable {
     /// Thu hồi ghi đè text="" + imageURL=nil trên SERVER, không chỉ ẩn UI —
     /// cờ này để phân biệt "thu hồi" với "tin nhắn rỗng thật".
     var isRecalled: Bool = false
+    /// [MỚI GĐ5/STT2] userID : thời điểm user đó "nhìn thấy" tin nhắn này trên màn hình.
+    /// THAY THẾ HOÀN TOÀN enum nhị phân `sent/read` cũ. Thiết kế dạng map ngay từ đầu để
+    /// tương thích sẵn cho nhóm chat (5B) — không cần đổi schema lần 2.
+    var readBy: [String: Date] = [:]
 }
 
 /// Bọc Message + trạng thái đồng bộ phía client — dùng để render UI (icon đồng hồ/nút Retry).
@@ -73,5 +71,9 @@ extension Message {
     /// Chỉ được thu hồi trong vòng 15 phút kể từ lúc gửi.
     var isRecallWindowOpen: Bool {
         Date().timeIntervalSince(timestamp) <= 15 * 60
+    }
+    /// [MỚI GĐ5/STT2] True nếu `userID` đã xem tin nhắn này (khác chính người gửi).
+    func isRead(by userID: String) -> Bool {
+        readBy[userID] != nil
     }
 }

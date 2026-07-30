@@ -13,10 +13,10 @@ struct ChatView: View {
     @Environment(AppState.self) private var appState
     @Environment(ToastCenter.self) private var toastCenter
     @State private var viewModel: ChatViewModel?
-
+    
     let conversationID: String
     let otherUserID: String
-
+    
     var body: some View {
         Group {
             if let viewModel {
@@ -40,16 +40,14 @@ struct ChatView: View {
             )
             viewModel = vm
             vm.startObserving()
-            async let readTask: () = vm.markAsRead()
-            async let profileTask: () = vm.loadOtherUserProfile()
-            _ = await (readTask, profileTask)
+            await vm.loadOtherUserProfile()
         }
     }
-
+    
     @ViewBuilder
     private func content(viewModel: ChatViewModel) -> some View {
         @Bindable var viewModel = viewModel
-
+        
         VStack(spacing: 0) {
             ScrollViewReader { proxy in
                 ScrollView {
@@ -60,12 +58,13 @@ struct ChatView: View {
                         Color.clear
                             .frame(height: 1)
                             .onAppear { Task { await viewModel.loadOlderMessages() } }
-
+                        
                         ForEach(viewModel.items) { item in
                             MessageBubbleView(
                                 item: item,
                                 isOutgoing: item.message.senderID == viewModel.currentUserID,
                                 currentUserID: viewModel.currentUserID,
+                                otherUserID: viewModel.otherUserID,
                                 onRetry: { viewModel.retrySend(itemID: item.id) },
                                 onReply: { viewModel.startReply(to: item) },
                                 onCopy: {
@@ -77,6 +76,8 @@ struct ChatView: View {
                                 onReact: { emoji in viewModel.toggleReaction(item: item, emoji: emoji) }
                             )
                             .id(item.id)
+                            // [MỚI GĐ5/STT2] Bubble THẬT SỰ xuất hiện trên màn hình → đánh dấu đã đọc.
+                            .onAppear { viewModel.markVisible(item) }
                         }
                     }
                     .padding(.horizontal, Spacing.md)
@@ -91,14 +92,14 @@ struct ChatView: View {
                     }
                 }
             }
-
+            
             if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
                     .font(AppFont.caption)
                     .foregroundStyle(.red)
                     .padding(.horizontal, Spacing.md)
             }
-
+            
             if let replyingTo = viewModel.replyingTo {
                 ComposerContextBanner(
                     title: L10n.Chat.replyingToLabel,
@@ -113,7 +114,7 @@ struct ChatView: View {
                     onCancel: { viewModel.cancelEdit() }
                 )
             }
-
+            
             MessageInputBarView(text: $viewModel.draftText) {
                 if viewModel.editingItem != nil {
                     Task { await viewModel.submitEdit() }

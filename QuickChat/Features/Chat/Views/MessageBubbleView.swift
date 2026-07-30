@@ -11,6 +11,7 @@ struct MessageBubbleView: View {
     let item: ChatMessageItem
     let isOutgoing: Bool
     let currentUserID: String
+    let otherUserID: String
     let onRetry: () -> Void
     let onReply: () -> Void
     let onCopy: () -> Void
@@ -19,11 +20,11 @@ struct MessageBubbleView: View {
     let onReact: (String) -> Void
     
     @State private var showReactionPicker = false
-
+    
     var body: some View {
         HStack {
             if isOutgoing { Spacer(minLength: 40) }
-
+            
             VStack(alignment: isOutgoing ? .trailing : .leading, spacing: Spacing.xs) {
                 if showReactionPicker {
                     reactionPickerBar
@@ -36,7 +37,7 @@ struct MessageBubbleView: View {
                 }
                 statusFooter
             }
-
+            
             if !isOutgoing { Spacer(minLength: 40) }
         }
     }
@@ -61,21 +62,21 @@ struct MessageBubbleView: View {
         .background(.regularMaterial, in: Capsule())
         .transition(.scale(scale: 0.85).combined(with: .opacity))
     }
-
+    
     @ViewBuilder
     private var bubbleContent: some View {
         MessageBubbleContentView(message: item.message, isOutgoing: isOutgoing, currentUserID: currentUserID)
             .contextMenu {
                 if !item.message.isRecalled {
-//                    ControlGroup {
-//                        ForEach(MessageReaction.allCases, id: \.rawValue) { reaction in
-//                            Button {
-//                                onReact(reaction.rawValue)
-//                            } label: {
-//                                Text(reaction.rawValue)
-//                            }
-//                        }
-//                    }
+                    //                    ControlGroup {
+                    //                        ForEach(MessageReaction.allCases, id: \.rawValue) { reaction in
+                    //                            Button {
+                    //                                onReact(reaction.rawValue)
+                    //                            } label: {
+                    //                                Text(reaction.rawValue)
+                    //                            }
+                    //                        }
+                    //                    }
                     Button {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                             showReactionPicker = true
@@ -113,12 +114,12 @@ struct MessageBubbleView: View {
                 }
             }
     }
-
+    
     private var groupedReactions: [(emoji: String, count: Int)] {
         let counts = Dictionary(grouping: item.message.reactions.values, by: { $0 }).mapValues(\.count)
         return counts.map { (emoji: $0.key, count: $0.value) }.sorted { $0.emoji < $1.emoji }
     }
-
+    
     private var reactionRow: some View {
         HStack(spacing: Spacing.xs) {
             ForEach(groupedReactions, id: \.emoji) { reaction in
@@ -139,7 +140,7 @@ struct MessageBubbleView: View {
             }
         }
     }
-
+    
     @ViewBuilder
     private var statusFooter: some View {
         HStack(spacing: Spacing.xs) {
@@ -163,7 +164,9 @@ struct MessageBubbleView: View {
                 }
                 .font(AppFont.timestamp)
                 .foregroundStyle(.secondary)
-                if isOutgoing, item.message.status == .read {
+                // [ĐỔI GĐ5/STT2] Đã đọc giờ tra theo readBy[otherUserID] của CHÍNH tin nhắn này —
+                // không còn field "status" nhị phân dùng chung cho cả conversation.
+                if isOutgoing, item.message.isRead(by: otherUserID) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(AppFont.timestamp)
                         .foregroundStyle(.blue)
